@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:request-config name="HTTP_Request_mble_schedules" doc:name="HTTP Request configuration" doc:id="7b4170b7-fda9-488d-86e5-c9a375153752" >
+		<http:request-connection host="localhost" port="8082" />
+	</http:request-config>
+	<flow name="getschedules-mbleFlow" doc:id="62b511df-e293-43ff-ab2d-903098d6c63a" >
+		<logger level="INFO" doc:name="Logger" doc:id="839f8179-d405-4167-8faf-da98b186c142" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	TransactionId : attributes.headers.Transactionid,&#10;	"departureLocationCode" : attributes.queryParams.departureLocationCode,&#10;	"destinationLocationCode" : attributes.queryParams.destinationLocationCode,&#10;	"transportCompany" : attributes.queryParams.companyName,&#10;	"transportType" : attributes.uriParams.transportType&#10;}]'/>
+		<ee:cache doc:name="Cache" doc:id="827ccb34-bf41-48d8-b11c-6ef3711a1a53" >
+			<http:request method="GET" doc:name="Request" doc:id="21056122-fa3f-4327-b9f4-3a27ed721116" url="http://localhost:8082/api/booking/{transportType}/schedules">
+			<http:headers><![CDATA[#[output application/java
+---
+{
+	TransactionId : attributes.headers.transactionid
+}]]]></http:headers>
+			<http:uri-params><![CDATA[#[output application/java
+---
+{
+	"transportCompany" : attributes.queryParams.companyName,
+	"transportType" : attributes.uriParams.transportType
+}]]]></http:uri-params>
+			<http:query-params><![CDATA[#[output application/java
+---
+{
+	"departureLocationCode" : attributes.queryParams.departureLocationCode,
+	"destinationLocationCode" : attributes.queryParams.destinationLocationCode
+}]]]></http:query-params>
+		</http:request>
+			<ee:transform doc:name="Transform Message" doc:id="bef95b91-eb70-427a-9c34-7316fc3951d9">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		</ee:cache>
+	</flow>
+</mule>
